@@ -26,7 +26,7 @@ A minimal yet scalable **Discord Bot Starter** built with `TypeScript` and `disc
 
  1. **Clone the repository**
 ```bash
- git clone https://github.com/ripmysoul/discord-bot-template.git your-project-name
+ git clone https://github.com/ripmysoul-01/discord-bot-template.git your-project-name
  cd your-project-name
  ```
  2. **Install dependencies**
@@ -42,7 +42,7 @@ TOKEN = Enter your bot token here.
 > **Important:** Do **not** share your `.env` file publicly — it contains sensitive data such as your bot token.
 
  4. **Run the bot**
- 
+
 Run in development mode:
 ```bash
 npm run dev
@@ -54,4 +54,4 @@ npm run build && npm run start
 
 ## 📜 License
 
-This project is licensed under the [MIT License](https://github.com/ripmysoul/discord-bot-template/blob/main/LICENSE).
+This project is licensed under the [MIT License](https://github.com/ripmysoul-01/discord-bot-template/blob/main/LICENSE).
