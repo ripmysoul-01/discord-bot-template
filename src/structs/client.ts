@@ -1,13 +1,16 @@
-import Discord from "discord.js";
+import Discord, { RESTPostAPIChatInputApplicationCommandsJSONBody, SlashCommandBuilder } from "discord.js";
 
 import fs from "fs";
 import path from "path";
 
-import { DiscordBot } from "../types/types";
+import { Clients } from "../types/types";
 
 export class Client<T extends boolean> extends Discord.Client<T> {
 
-    public commands = new Discord.Collection<string, DiscordBot.Command>();
+    public buttons = new Discord.Collection<string, Clients.Button>();
+    public commands = new Discord.Collection<string, Clients.Command>();
+    public modals = new Discord.Collection<string, Clients.Modal>();
+    public subcommands = new Discord.Collection<string, Clients.Subcommand>();
 
     constructor(options: Discord.ClientOptions) {
         super(options);
@@ -32,6 +35,16 @@ export class Client<T extends boolean> extends Discord.Client<T> {
             )
             .filter((file) => file.endsWith(".ts"));
 
+        const buttonFiles = fs
+            .readdirSync(
+                path.join(
+                    __dirname,
+                    "..",
+                    "buttons"
+                )
+            )
+            .filter((file) => file.endsWith(".ts"));
+
         const commandFiles = fs
             .readdirSync(
                 path.join(
@@ -42,6 +55,25 @@ export class Client<T extends boolean> extends Discord.Client<T> {
             )
             .filter((file) => file.endsWith(".ts"));
 
+        const modalFiles = fs
+            .readdirSync(
+                path.join(
+                    __dirname,
+                    "..",
+                    "modals"
+                )
+            )
+            .filter((file) => file.endsWith(".ts"));
+
+        const subcommandFiles = fs
+            .readdirSync(
+                path.join(
+                    __dirname,
+                    "..",
+                    "subcommands"
+                )
+            ).filter((file) => file.endsWith(".ts"));
+
         const events = (await Promise.all(
             eventFiles.map(
                 async (event) =>
@@ -50,11 +82,35 @@ export class Client<T extends boolean> extends Discord.Client<T> {
             )
         ));
 
+        const buttons = (await Promise.all(
+            buttonFiles.map(
+                async (button) =>
+                    (await import(`../buttons/${button}`)).default ||
+                    (await import(`../buttons/${button}`))
+            )
+        ));
+
         const commands = (await Promise.all(
             commandFiles.map(
                 async (command) =>
                     (await import(`../commands/${command}`)).default ||
                     (await import(`../commands/${command}`))
+            )
+        ));
+
+        const modals = (await Promise.all(
+            modalFiles.map(
+                async (modal) =>
+                    (await import(`../modals/${modal}`)).default ||
+                    (await import(`../modals/${modal}`))
+            )
+        ));
+
+        const subcommands = (await Promise.all(
+            subcommandFiles.map(
+                async (subcommand) =>
+                    (await import(`../subcommands/${subcommand}`)).default ||
+                    (await import(`../subcommands/${subcommand}`))
             )
         ));
 
@@ -69,6 +125,14 @@ export class Client<T extends boolean> extends Discord.Client<T> {
             console.log(`Loaded event "${event.name}"`);
         };
 
+        for (const button of buttons) {
+            this.buttons.set(
+                button.customId,
+                button
+            );
+            console.log(`Loaded button "${button.customId}"`);
+        };
+
         for (const command of commands) {
             this.commands.set(
                 command.data.name,
@@ -77,8 +141,24 @@ export class Client<T extends boolean> extends Discord.Client<T> {
             console.log(`Loaded command "${command.data.name}"`);
         };
 
-        const requestBody: DiscordBot.CommandData[] = this.commands
-            .map((command) => command.data) ?? [];
+        for (const modal of modals) {
+            this.modals.set(
+                modal.customId,
+                modal
+            );
+            console.log(`Loaded modal "${modal.customId}"`);
+        };
+
+        for (const subcommand of subcommands) {
+            this.subcommands.set(
+                `${subcommand.commandName}.${subcommand.subcommandName}`,
+                subcommand
+            );
+            console.log(`Loaded subcommand "${subcommand.commandName} ${subcommand.subcommandName}"`);
+        };
+
+        const requestBody: RESTPostAPIChatInputApplicationCommandsJSONBody[] = this.commands
+            .map((command) => command.data.toJSON()) ?? [];
 
         const data: any = await this.rest
             .put(

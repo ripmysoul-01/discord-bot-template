@@ -1,10 +1,11 @@
-import { DiscordBot } from "../types/types";
+import { SlashCommandBuilder } from "discord.js";
+import { Clients } from "../types/types";
 
 export default {
-    data: {
-        name: "ping",
-        description: "Returns websocket ping.",
-    },
+    data: new SlashCommandBuilder()
+        .setName("ping")
+        .setDescription("Returns websocket ping."),
+        
     run: async (client, interaction) => {
         await interaction.reply({
             content: `Websocket Latency: \`${client.ws.ping}ms.\``,
@@ -12,4 +13,4 @@ export default {
         });
         return;
     },
-} as DiscordBot.Command;
+} as Clients.Command;
